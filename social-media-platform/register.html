@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="Auth">
+  <main>
+    <section class="auth-card" aria-labelledby="register-heading">
+
+      <header>
+        <h2 id="register-heading">Create Account</h2>
+        <p class="subtitle">Join our social media platform</p>
+      </header>
+
+      <form onsubmit="register(event)">
+
+        <div class="input-group">
+          <label for="fullname">Full Name</label>
+          <input id="fullname" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input id="username" placeholder="Choose a username" required>
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Choose a password" required>
+        </div>
+
+        <button class="btn">Register</button>
+      </form>
+
+      <p class="auth-link">
+        Already have an account? <a href="login.html">Login here</a>
+      </p>
+
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>
