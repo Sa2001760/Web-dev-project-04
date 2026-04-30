@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body onload="localStorage.removeItem('viewUser'); checkAuth(); switchFeed('recent');">
+<!-- <body onload="localStorage.removeItem('viewUser'); checkAuth(); switchFeed('recent');"> -->
+<body onload="checkAuth(); loadPosts();">
   <button onclick="localStorage.clear(); location.reload();">
     Reset App
   </button>

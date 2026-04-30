@@ -8,17 +8,62 @@ const adapter = new PrismaBetterSqlite3({
 
 const prisma = new PrismaClient({ adapter });
 
+// GET posts
 export async function GET() {
   const posts = await prisma.post.findMany({
-    include: {
-      user: true,
-      comments: true,
-      likes: true,
+  include: {
+    user: true,
+    comments: {
+      include: {
+        user: true   // 🔥 ADD THIS
+      }
     },
-    orderBy: {
-      createdAt: "desc",
+    likes: true
+  },
+  orderBy: {
+    createdAt: "desc"
+  }
+});
+
+  return new Response(JSON.stringify(posts), {
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
     },
   });
+}
 
-  return Response.json(posts);
+// CREATE POST
+export async function POST(request) {
+  try {
+    const body = await request.json();
+
+    const { content, userId } = body;
+
+    if (!content || !userId) {
+      return Response.json(
+        { error: "Missing data" },
+        { status: 400 }
+      );
+    }
+
+    const post = await prisma.post.create({
+      data: {
+        content,
+        userId: Number(userId),
+      },
+    });
+
+    return new Response(JSON.stringify(post), {
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+  } catch (error) {
+    return Response.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
 }
