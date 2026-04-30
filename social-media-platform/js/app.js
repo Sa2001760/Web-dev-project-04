@@ -402,10 +402,25 @@ function searchUser() {
 async function loadPosts() {
   try {
     const res = await fetch("http://localhost:3000/api/posts");
-    const posts = await res.json();
+    let posts = await res.json();
 
     const postsContainer = document.getElementById("posts");
     postsContainer.innerHTML = "";
+
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    if (currentFeed === "following") {
+      const usersRes = await fetch("http://localhost:3000/api/users");
+      const users = await usersRes.json();
+
+      const me = users.find((u) => u.id === currentUser.id);
+
+      // get IDs of users I follow
+      const followingIds = me.following.map((f) => f.followingId);
+
+      // filter posts
+      posts = posts.filter((p) => followingIds.includes(p.userId));
+    }
 
     posts.forEach((post) => {
       const commentsHTML = post.comments
@@ -421,7 +436,7 @@ async function loadPosts() {
 
       <div>
         <p 
-          style="cursor:pointer; font-weight:bold;"
+          style="cursor:pointer; font-weight:bold; margin:0;"
           onclick="viewProfile('${post.user.username}')"
         >
           ${post.user.username}
@@ -630,14 +645,32 @@ function viewProfile(username) {
 }
 
 // DELETE POST
-function deletePost(id) {
+async function deletePost(postId) {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+  if (!currentUser) return;
+
   if (!confirm("Delete this post?")) return;
 
-  let posts = getPosts();
-  posts = posts.filter((p) => p.id !== id);
+  await fetch("http://localhost:3000/api/posts", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      postId,
+      userId: currentUser.id,
+    }),
+  });
 
-  savePosts(posts);
   loadProfile();
+  // if (!confirm("Delete this post?")) return;
+
+  // let posts = getPosts();
+  // posts = posts.filter((p) => p.id !== id);
+
+  // savePosts(posts);
+  // loadProfile();
 }
 
 // EDIT BIO
@@ -813,11 +846,15 @@ async function loadProfile() {
     <div id="comments-${p.id}" class="comments-section" style="display:none;">
       
       <div class="comments">
-        ${p.comments.map(c => `
+        ${p.comments
+          .map(
+            (c) => `
           <div class="comment">
             <strong>${c.user?.username || "unknown"}:</strong> ${c.text}
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
 
       <div class="comment-box">

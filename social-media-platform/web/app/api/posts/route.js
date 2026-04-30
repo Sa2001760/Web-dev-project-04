@@ -8,62 +8,90 @@ const adapter = new PrismaBetterSqlite3({
 
 const prisma = new PrismaClient({ adapter });
 
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+}
+
 // GET posts
 export async function GET() {
   const posts = await prisma.post.findMany({
-  include: {
-    user: true,
-    comments: {
-      include: {
-        user: true   // 🔥 ADD THIS
-      }
+    include: {
+      user: true,
+      comments: { include: { user: true } },
+      likes: true,
     },
-    likes: true
-  },
-  orderBy: {
-    createdAt: "desc"
-  }
-});
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return new Response(JSON.stringify(posts), {
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
-    },
+    headers: corsHeaders(),
   });
 }
 
 // CREATE POST
-export async function POST(request) {
-  try {
-    const body = await request.json();
+export async function POST(req) {
+  const body = await req.json();
 
-    const { content, userId } = body;
-
-    if (!content || !userId) {
-      return Response.json(
-        { error: "Missing data" },
-        { status: 400 }
-      );
-    }
-
-    const post = await prisma.post.create({
-      data: {
-        content,
-        userId: Number(userId),
-      },
-    });
-
-    return new Response(JSON.stringify(post), {
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*",
+  const post = await prisma.post.create({
+    data: {
+      content: body.content,
+      userId: body.userId,
     },
   });
-  } catch (error) {
-    return Response.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+
+  return new Response(JSON.stringify(post), {
+    headers: corsHeaders(),
+  });
+}
+
+export async function DELETE(request) {
+  const body = await request.json();
+  const { postId, userId } = body;
+
+  const post = await prisma.post.findUnique({
+    where: { id: Number(postId) },
+  });
+
+  if (!post) {
+    return new Response(JSON.stringify({ error: "Post not found" }), {
+      status: 404,
+      headers: corsHeaders(),
+    });
   }
+
+  if (post.userId !== Number(userId)) {
+    return new Response(JSON.stringify({ error: "Not allowed" }), {
+      status: 403,
+      headers: corsHeaders(),
+    });
+  }
+
+  await prisma.comment.deleteMany({
+    where: { postId: Number(postId) },
+  });
+
+  await prisma.like.deleteMany({
+    where: { postId: Number(postId) },
+  });
+
+  await prisma.post.delete({
+    where: { id: Number(postId) },
+  });
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: corsHeaders(),
+  });
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders(),
+  });
 }
