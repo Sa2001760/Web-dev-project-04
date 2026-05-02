@@ -1,42 +1,20 @@
-import "dotenv/config";
-import { PrismaClient } from "@/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || "file:./dev.db",
-});
-
-const prisma = new PrismaClient({ adapter });
+import { getAllComments, createComment } from "@/lib/repository";
 
 const headers = {
+  "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-
-// ➜ GET comments (optional, useful)
 export async function GET() {
-  const comments = await prisma.comment.findMany({
-    include: { user: true },
-  });
-
+  const comments = await getAllComments();
   return new Response(JSON.stringify(comments), { headers });
 }
 
-
-// ➜ ADD comment
 export async function POST(req) {
   const body = await req.json();
-
-  const comment = await prisma.comment.create({
-    data: {
-      text: body.text,
-      userId: body.userId,
-      postId: body.postId,
-    },
-  });
-
+  const comment = await createComment(body);
   return new Response(JSON.stringify(comment), { headers });
 }
 

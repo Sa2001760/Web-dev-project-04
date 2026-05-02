@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma Schema — Linkora Social Media Platform
+// https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -11,6 +9,7 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
 model User {
   id        Int      @id @default(autoincrement())
   fullname  String
